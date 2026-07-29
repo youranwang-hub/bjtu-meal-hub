@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}首页 - 上新了！我的饭{% endblock %}
+{% block content %}
+
+{% if search_mode %}
+<div class="container py-3">
+    <h5 class="mb-3">搜索 "{{ query }}" 的结果（{{ dishes|length }} 条）</h5>
+    {% if dishes %}
+    <div class="dish-list">
+        {% for d in dishes %}
+        <a href="/dish/{{ d.id }}" class="dish-item text-decoration-none">
+            {% set img = get_dish_image(d) %}
+            {% if img %}
+            <img src="{{ url_for('static', filename=img) }}" class="dish-img-placeholder" alt="{{ d.name }}" style="object-fit: cover;">
+            {% else %}
+            <div class="dish-img-placeholder"><i class="bi bi-image"></i></div>
+            {% endif %}
+            <div class="dish-info">
+                <div class="dish-name">{{ d.name }}{% if d.is_new %}<span class="badge bg-danger ms-1">新</span>{% endif %}</div>
+                <div class="dish-meta">{{ d.canteen_name }} · {{ d.stall_name }}</div>
+            </div>
+            <div class="dish-price">¥{{ "%.1f"|format(d.price) }}</div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-search" style="font-size:3rem;"></i>
+        <p class="mt-2">没有找到相关菜品</p>
+    </div>
+    {% endif %}
+    <!-- 搜索分页 -->
+    {% if total_pages > 1 %}
+    <nav class="page-nav mt-3">
+        {% if page > 1 %}
+        <a href="/search?q={{ query }}&page={{ page - 1 }}" class="page-link">&laquo; 上一页</a>
+        {% endif %}
+        {% for i in range(1, total_pages + 1) %}
+            {% if i == page %}
+            <span class="page-link active">{{ i }}</span>
+            {% elif i <= 3 or i > total_pages - 3 or (i >= page - 1 and i <= page + 1) %}
+            <a href="/search?q={{ query }}&page={{ i }}" class="page-link">{{ i }}</a>
+            {% elif i == 4 or i == total_pages - 3 %}
+            <span class="page-link">...</span>
+            {% endif %}
+        {% endfor %}
+        {% if page < total_pages %}
+        <a href="/search?q={{ query }}&page={{ page + 1 }}" class="page-link">下一页 &raquo;</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+    <a href="/" class="btn btn-outline-primary btn-sm mt-2">← 返回首页</a>
+</div>
+
+{% else %}
+<div class="container py-3">
+    <!-- 餐次提示 -->
+    {% if meal_hint %}
+    <div class="meal-hint mb-3">
+        <i class="bi bi-clock"></i> {{ meal_hint }}
+    </div>
+    {% endif %}
+
+    <!-- 今日推荐 -->
+    {% if recommended %}
+    <section class="mb-4">
+        <h5 class="section-title"><i class="bi bi-hand-thumbs-up-fill text-primary"></i> 今日推荐</h5>
+        <div class="row g-2">
+            {% for d in recommended %}
+            <div class="col-6 col-md-4">
+                <a href="/dish/{{ d.id }}" class="rec-card text-decoration-none">
+                    {% set img = get_dish_image(d) %}{% if img %}<img src="{{ url_for('static', filename=img) }}" class="rec-card-img" alt="{{ d.name }}" style="object-fit: cover;">{% else %}<div class="rec-card-img"><i class="bi bi-image"></i></div>{% endif %}
+                    <div class="rec-card-body">
+                        <div class="rec-name">{{ d.name }}</div>
+                        <div class="rec-meta">{{ d.stall_name }}</div>
+                        <div class="rec-price-row">
+                            <span class="rec-price">¥{{ "%.1f"|format(d.price) }}</span>
+                            {% if d.average_rating > 0 %}
+                            <span class="rec-rating ms-auto"><i class="bi bi-star-fill text-warning"></i> {{ "%.1f"|format(d.average_rating) }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- 特价菜品 -->
+    {% if special_dishes %}
+    <section class="mb-4">
+        <h5 class="section-title"><i class="bi bi-tag-fill text-success"></i> 特价菜品</h5>
+        <p class="text-muted small mb-2">每周特惠，实惠之选</p>
+        <div class="row g-2">
+            {% for d in special_dishes %}
+            <div class="col-6 col-md-4">
+                <a href="/dish/{{ d.id }}" class="rec-card text-decoration-none">
+                    {% set img = get_dish_image(d) %}{% if img %}<img src="{{ url_for('static', filename=img) }}" class="rec-card-img" alt="{{ d.name }}" style="object-fit: cover;">{% else %}<div class="rec-card-img"><i class="bi bi-image"></i></div>{% endif %}
+                    <div class="rec-card-body">
+                        <div class="rec-name">{{ d.name }}</div>
+                        <div class="rec-meta">{{ d.stall_name }}</div>
+                        <div class="rec-price-row">
+                            <span class="rec-price-original">¥{{ "%.1f"|format(d.price) }}</span>
+                            <span class="rec-price text-danger">¥{{ "%.1f"|format(d.special_price) }}</span>
+                            {% if d.average_rating > 0 %}
+                            <span class="rec-rating ms-auto"><i class="bi bi-star-fill text-warning"></i> {{ "%.1f"|format(d.average_rating) }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% else %}
+    <section class="mb-4">
+        <h5 class="section-title"><i class="bi bi-tag-fill text-success"></i> 特价菜品</h5>
+        <div class="text-center py-3 text-muted small">
+            <p class="mb-0">本周暂无特价菜品，敬请期待</p>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- 上新轮播 -->
+    {% if new_dishes %}
+    <section class="mb-4">
+        <h5 class="section-title"><i class="bi bi-star-fill text-danger"></i> 本周上新</h5>
+        <div class="new-dish-scroll">
+            {% for d in new_dishes %}
+            <a href="/dish/{{ d.id }}" class="new-dish-card text-decoration-none">
+                {% set img = get_dish_image(d) %}{% if img %}<img src="{{ url_for('static', filename=img) }}" class="new-dish-img" alt="{{ d.name }}" style="object-fit: cover;">{% else %}<div class="new-dish-img"><i class="bi bi-image"></i></div>{% endif %}
+                <div class="new-dish-name">{{ d.name }}</div>
+                <div class="new-dish-price">¥{{ "%.1f"|format(d.price) }}</div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- 热门榜单 -->
+    <section class="mb-4">
+        <h5 class="section-title"><i class="bi bi-trophy-fill text-warning"></i> 热门榜单</h5>
+        <div class="hot-list">
+            {% for d in hot_dishes[:5] %}
+            <a href="/dish/{{ d.id }}" class="hot-item text-decoration-none">
+                <span class="hot-rank {{ 'top3' if loop.index <= 3 }}">{{ loop.index }}</span>
+                <div class="hot-info">
+                    <div class="hot-name">{{ d.name }}</div>
+                    <div class="hot-meta">{{ d.stall_name }}</div>
+                </div>
+                <div class="hot-right">
+                    <span class="hot-price">¥{{ "%.1f"|format(d.price) }}</span>
+                    {% if d.average_rating > 0 %}
+                    <span class="hot-rating"><i class="bi bi-star-fill text-warning"></i> {{ "%.1f"|format(d.average_rating) }}</span>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 食堂列表 -->
+    <section>
+        <h5 class="section-title"><i class="bi bi-shop"></i> 食堂一览</h5>
+        <div class="row g-3">
+            {% for c in canteens %}
+            <div class="col-6 col-md-4">
+                <a href="/canteen/{{ c.id }}" class="canteen-card text-decoration-none">
+                    <div class="canteen-card-body">
+                        <h6 class="canteen-name">{{ c.name }} {{ c.floor }}</h6>
+                        <p class="canteen-desc">{{ c.description }}</p>
+                        <span class="crowd-badge crowd-{{ c.crowd_status }}">{{ c.crowd_status }}</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endif %}
+
+{% endblock %}

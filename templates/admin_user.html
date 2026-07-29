@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}用户详情 - 管理后台{% endblock %}
+{% block content %}
+
+<div class="container py-3">
+    <a href="/admin" class="btn btn-sm btn-outline-secondary mb-3">← 返回管理后台</a>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h4>{{ user.nickname or user.username }}</h4>
+            <p class="text-muted mb-1">@{{ user.username }}</p>
+            <p class="mb-0">
+                {% if user.is_admin %}<span class="badge bg-danger">管理员</span>{% endif %}
+                <span class="badge bg-warning text-dark">{{ user.checkin_points }} 积分</span>
+                <span class="text-muted small ms-2">注册于 {{ user.create_time[:10] }}</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-3"><div class="stat-card"><div class="stat-num">{{ ratings|length }}</div><div class="stat-label">评分</div></div></div>
+        <div class="col-3"><div class="stat-card"><div class="stat-num">{{ comments|length }}</div><div class="stat-label">评论</div></div></div>
+        <div class="col-3"><div class="stat-card"><div class="stat-num">{{ posts|length }}</div><div class="stat-label">帖子</div></div></div>
+        <div class="col-3"><div class="stat-card"><div class="stat-num">{{ checkins|length }}</div><div class="stat-label">打卡</div></div></div>
+    </div>
+
+    {% if ratings %}
+    <div class="card mb-3"><div class="card-body">
+        <h6>评分记录</h6>
+        {% for r in ratings %}
+        <div class="py-1 border-bottom small d-flex justify-content-between">
+            <span>{{ r.dish_name }}</span>
+            <span class="text-warning">{% for i in range(r.score) %}<i class="bi bi-star-fill"></i>{% endfor %}</span>
+        </div>
+        {% endfor %}
+    </div></div>
+    {% endif %}
+
+    {% if comments %}
+    <div class="card mb-3"><div class="card-body">
+        <h6>评论记录</h6>
+        {% for c in comments %}
+        <div class="py-1 border-bottom small">
+            <span class="fw-bold">{{ c.dish_name }}</span>
+            <p class="mb-0 text-muted">{{ c.content[:100] }}{% if c.content|length > 100 %}...{% endif %}</p>
+        </div>
+        {% endfor %}
+    </div></div>
+    {% endif %}
+
+    {% if posts %}
+    <div class="card mb-3"><div class="card-body">
+        <h6>帖子记录</h6>
+        {% for p in posts %}
+        <div class="py-1 border-bottom small">
+            <p class="mb-0">{{ p.content[:80] }}{% if p.content|length > 80 %}...{% endif %}</p>
+            <span class="text-muted">{{ p.create_time[:10] }} | {{ p.like_count }} 赞</span>
+        </div>
+        {% endfor %}
+    </div></div>
+    {% endif %}
+
+    {% if checkins %}
+    <div class="card"><div class="card-body">
+        <h6>打卡记录</h6>
+        {% set meal_map = {'breakfast': '早餐', 'lunch': '午餐', 'dinner': '晚餐'} %}
+        {% for c in checkins %}
+        <div class="py-1 border-bottom small">
+            <span>{{ c.checkin_date }}</span>
+            <span class="badge bg-warning text-dark">{{ meal_map.get(c.meal_type, c.meal_type) }}</span>
+            <span class="text-muted">{% if c.meal_type == 'breakfast' %}+3{% else %}+2{% endif %}</span>
+        </div>
+        {% endfor %}
+    </div></div>
+    {% endif %}
+</div>
+
+{% endblock %}

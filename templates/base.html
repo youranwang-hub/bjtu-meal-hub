@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}上新了！我的饭{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar fixed-top" id="top-nav">
+        <div class="nav-wrapper">
+            <div class="nav-top-row">
+                <a class="navbar-brand" href="/">
+                    <i class="bi bi-egg-fried"></i> <span class="brand-text-full">上新了！我的饭</span><span class="brand-text-short">我的饭</span>
+                </a>
+                <form class="search-form" action="/search" method="get">
+                    <input class="form-control search-input" type="search" name="q"
+                           placeholder="搜索菜品、档口..." value="{{ query or '' }}">
+                </form>
+            </div>
+            <div class="nav-links-row d-none d-md-flex">
+                <a href="/" class="top-nav-link {{ 'active' if request.path == '/' }}"><i class="bi bi-house"></i> 首页</a>
+                <a href="/community" class="top-nav-link {{ 'active' if request.path == '/community' }}"><i class="bi bi-people"></i> 社区</a>
+                <a href="/checkin" class="top-nav-link {{ 'active' if request.path == '/checkin' }}"><i class="bi bi-check2-circle"></i> 打卡</a>
+                <a href="/profile" class="top-nav-link {{ 'active' if request.path == '/profile' }}"><i class="bi bi-person"></i> 我的</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash 消息 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-1" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        {% if error_code %}
+        <div class="container py-5 text-center">
+            <h1 class="display-1 text-muted">{{ error_code }}</h1>
+            <p class="text-muted">{{ error_msg }}</p>
+            <a href="/" class="btn btn-primary">返回首页</a>
+        </div>
+        {% else %}
+        {% block content %}{% endblock %}
+        {% endif %}
+    </main>
+
+    <!-- 底部导航栏（移动端） -->
+    <nav class="bottom-nav d-md-none">
+        <a href="/" class="bottom-nav-item {{ 'active' if request.path == '/' }}">
+            <i class="bi bi-house"></i><span>首页</span>
+        </a>
+        <a href="/community" class="bottom-nav-item {{ 'active' if request.path == '/community' }}">
+            <i class="bi bi-people"></i><span>社区</span>
+        </a>
+        <a href="/checkin" class="bottom-nav-item {{ 'active' if request.path == '/checkin' }}">
+            <i class="bi bi-check2-circle"></i><span>打卡</span>
+        </a>
+        <a href="/profile" class="bottom-nav-item {{ 'active' if request.path == '/profile' }}">
+            <i class="bi bi-person"></i><span>我的</span>
+        </a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}社区 - 上新了！我的饭{% endblock %}
+{% block content %}
+
+<div class="container py-3">
+    <h4 class="mb-3"><i class="bi bi-people"></i> 美食社区</h4>
+
+    <!-- 发帖 -->
+    {% if current_user.is_authenticated %}
+    <div class="card post-form-card mb-3">
+        <div class="card-body">
+            <form method="POST" action="/post/create" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <textarea name="content" class="form-control post-textarea" rows="2"
+                    placeholder="{{ random_placeholder or '分享你的美食体验...' }}" maxlength="1000" required></textarea>
+                <div class="d-flex gap-2 align-items-center flex-wrap mt-2">
+                    <div class="dish-search-wrap">
+                        <input type="text" id="dish-search" class="form-control form-control-sm"
+                            placeholder="关联菜品（输入菜名搜索）" autocomplete="off">
+                        <input type="hidden" name="dish_name" id="dish-name-hidden">
+                        <div id="dish-suggestions" class="dish-sugg-dropdown"></div>
+                    </div>
+                    <input type="file" name="images" accept="image/*" multiple
+                        class="form-control form-control-sm" style="width:auto;max-width:180px;">
+                    <button type="submit" class="btn btn-primary btn-sm ms-auto">
+                        <i class="bi bi-send"></i> 发布
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="community-empty">
+        <i class="bi bi-chat-square-text community-empty-icon"></i>
+        <p>登录后分享你的美食体验</p>
+        <a href="/login?next=/community" class="btn btn-primary btn-sm">立即登录</a>
+    </div>
+    {% endif %}
+
+    <!-- 热门帖子 -->
+    {% if hot_posts %}
+    <section class="mb-4">
+        <h5 class="section-title"><i class="bi bi-fire text-danger"></i> 热门帖子</h5>
+        {% for p in hot_posts %}
+        <div class="card post-card mb-2">
+            <div class="card-body py-2">
+                <div class="d-flex align-items-center mb-1">
+                    <div class="post-avatar" style="background:{{ p.avatar_color or '#1a3c6e' }};width:28px;height:28px;font-size:0.75rem;">
+                        {{ (p.nickname or '用户')[0]|upper }}
+                    </div>
+                    <strong class="small ms-2">{{ p.nickname }}</strong>
+                    {% if p.dish_id %}
+                    <a href="/dish/{{ p.dish_id }}" class="ms-2 small text-primary">#关联菜品#</a>
+                    {% endif %}
+                    <small class="text-muted ms-auto">{{ p.time_ago }}</small>
+                </div>
+                <p class="mb-1 small">{{ p.content[:100] }}{% if p.content|length > 100 %}...{% endif %}</p>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="text-muted small"><i class="bi bi-heart"></i> {{ p.like_count }}</span>
+                    <a href="/post/{{ p.id }}" class="small text-primary">查看详情</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <!-- 全部帖子 -->
+    {% if posts or hot_posts %}
+    {% for p in posts %}
+    <div class="card post-card mb-3">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+                <div class="post-avatar" style="background:{{ p.avatar_color or '#1a3c6e' }};">
+                    {{ (p.nickname or '用户')[0]|upper }}
+                </div>
+                <div class="ms-2">
+                    <strong>{{ p.nickname or '用户' }}</strong>
+                    <div class="text-muted" style="font-size:0.7rem;">{{ p.time_ago }}</div>
+                </div>
+                {% if current_user.is_authenticated and (p.user_id == current_user.id or current_user.is_admin) %}
+                <form method="POST" action="/post/{{ p.id }}/delete" class="ms-auto" onsubmit="return confirm('确定删除这条帖子？')">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:0.7rem;padding:1px 6px;">删除</button>
+                </form>
+                {% endif %}
+            </div>
+            <p class="mb-2 post-content">{{ p.content }}</p>
+            {% if p.dish_id %}
+            <a href="/dish/{{ p.dish_id }}" class="post-dish-link mb-2">
+                <i class="bi bi-link-45deg"></i> 关联菜品
+            </a>
+            {% endif %}
+            {% if p.image_list %}
+            <div class="post-images mb-2">
+                {% for img in p.image_list %}
+                <img src="{{ url_for('static', filename=img) }}" class="post-img" alt="图片">
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="d-flex gap-3 align-items-center post-actions">
+                {% if current_user.is_authenticated %}
+                <form method="POST" action="/post/{{ p.id }}/like" class="d-inline">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm {{ 'btn-danger' if p.user_liked else 'btn-outline-danger' }}">
+                        <i class="bi {{ 'bi-heart-fill' if p.user_liked else 'bi-heart' }}"></i> {{ p.like_count }}
+                    </button>
+                </form>
+                {% else %}
+                <a href="/login?next=/community" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-heart"></i> {{ p.like_count }}
+                </a>
+                {% endif %}
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleComments({{ p.id }})">
+                    <i class="bi bi-chat"></i> {{ p.comments|length }}
+                </button>
+            </div>
+
+            <!-- 评论 -->
+            <div id="post-comments-{{ p.id }}" class="post-comments mt-2" style="display:none;">
+                {% for c in p.comments %}
+                <div class="post-comment-item">
+                    <strong>{{ c.nickname }}</strong>
+                    <span class="small">{{ c.content }}</span>
+                    <small class="text-muted">{{ c.time_ago }}</small>
+                </div>
+                {% endfor %}
+                {% if current_user.is_authenticated %}
+                <form method="POST" action="/post/{{ p.id }}/comment" class="mt-2 d-flex gap-2">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="content" class="form-control form-control-sm"
+                        placeholder="写评论..." maxlength="300" required>
+                    <button type="submit" class="btn btn-sm btn-primary">发送</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="community-empty">
+        <i class="bi bi-camera community-empty-icon"></i>
+        <p class="community-empty-title">还没有人分享美食</p>
+        <p class="community-empty-sub">快来当第一个吧！</p>
+    </div>
+    {% endif %}
+
+    <!-- 分页 -->
+    {% if total_pages > 1 %}
+    <nav class="page-nav">
+        {% if page > 1 %}
+        <a href="/community?page={{ page - 1 }}" class="page-link">&laquo; 上一页</a>
+        {% endif %}
+        {% for i in range(1, total_pages + 1) %}
+            {% if i == page %}
+            <span class="page-link active">{{ i }}</span>
+            {% elif i <= 3 or i > total_pages - 3 or (i >= page - 1 and i <= page + 1) %}
+            <a href="/community?page={{ i }}" class="page-link">{{ i }}</a>
+            {% elif i == 4 or i == total_pages - 3 %}
+            <span class="page-link">...</span>
+            {% endif %}
+        {% endfor %}
+        {% if page < total_pages %}
+        <a href="/community?page={{ page + 1 }}" class="page-link">下一页 &raquo;</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</div>
+
+<script>
+function toggleComments(postId) {
+    var el = document.getElementById('post-comments-' + postId);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+
+{% endblock %}

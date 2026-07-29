@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}注册 - 上新了！我的饭{% endblock %}
+{% block content %}
+
+<div class="container py-4">
+    <div class="auth-card">
+        <h4 class="text-center mb-3">注册</h4>
+        <form method="POST" action="/register">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label">用户名</label>
+                <input type="text" name="username" class="form-control" placeholder="2-20个字符" required minlength="2" maxlength="20">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">昵称</label>
+                <input type="text" name="nickname" class="form-control" placeholder="选填，默认同用户名" maxlength="20">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">密码</label>
+                <input type="password" name="password" class="form-control" placeholder="至少6位" required minlength="6">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">确认密码</label>
+                <input type="password" name="password_confirm" class="form-control" placeholder="请再次输入密码" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">注册</button>
+        </form>
+        <div class="text-center mt-3">
+            <span class="text-muted">已有账号？</span>
+            <a href="/login">去登录</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ dish.name }} - 上新了！我的饭{% endblock %}
+{% block content %}
+
+<div class="container py-3">
+    <a href="/stall/{{ dish.stall_id }}" class="btn btn-sm btn-outline-secondary mb-3">
+        ← {{ dish.stall_name }}
+    </a>
+
+    <!-- 菜品图片 -->
+    {% set img = get_dish_image(dish) %}
+    {% if img %}
+    <img src="{{ url_for('static', filename=img) }}" class="dish-hero-img mb-3" alt="{{ dish.name }}" style="object-fit: cover;">
+    {% else %}
+    <div class="dish-hero-img mb-3">
+        <i class="bi bi-image" style="font-size: 4rem;"></i>
+    </div>
+    {% endif %}
+
+    <!-- 基本信息 -->
+    <div class="mb-2">
+        <h4>
+            {{ dish.name }}
+            {% if dish.is_new %}<span class="badge bg-danger ms-1">新</span>{% endif %}
+        </h4>
+        <p class="text-muted mb-1">{{ dish.canteen_name }} · {{ dish.stall_name }}</p>
+        <h3 class="text-primary">¥{{ "%.1f"|format(dish.price) }}</h3>
+    </div>
+
+    {% if dish.tags %}
+    <div class="mb-3">
+        {% for tag in dish.tags.split(',') %}
+        <span class="tag-badge">{{ tag }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 评分区域 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">综合评分</h5>
+                    <div class="text-warning fs-4">
+                        {% if dish.average_rating > 0 %}
+                        {% set full = dish.average_rating|int %}
+                        {% for i in range(full) %}<i class="bi bi-star-fill"></i>{% endfor %}
+                        {% if dish.average_rating - full >= 0.5 %}<i class="bi bi-star-half"></i>{% endif %}
+                        <small class="text-muted ms-1">{{ "%.1f"|format(dish.average_rating) }}</small>
+                        {% else %}
+                        <span class="text-muted fs-6">暂无评分</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if current_user.is_authenticated %}
+                <div>
+                    <form method="POST" action="/dish/{{ dish.id }}/rate" class="rating-form">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <div class="star-rating mb-2">
+                            {% for i in range(5, 0, -1) %}
+                            <input type="radio" name="score" value="{{ i }}" id="star{{ i }}"
+                                   {{ 'checked' if user_rating == i }}>
+                            <label for="star{{ i }}"><i class="bi bi-star-fill"></i></label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn btn-warning btn-sm w-100">
+                            {{ '修改评分' if user_rating else '提交评分' }}
+                        </button>
+                    </form>
+                    {% if user_rating %}<small class="text-muted">你已评分：{{ user_rating }} 分</small>{% endif %}
+                </div>
+                {% else %}
+                <a href="/login?next=/dish/{{ dish.id }}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-star"></i> 登录后评分
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 评论区域 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>评论（{{ comments|length }}）</h5>
+            {% if current_user.is_authenticated %}
+            <form method="POST" action="/dish/{{ dish.id }}/comment" class="mb-3">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <textarea name="content" class="form-control mb-2" rows="2"
+                          placeholder="说点什么..." maxlength="500" required></textarea>
+                <button type="submit" class="btn btn-primary btn-sm">发表评论</button>
+            </form>
+            {% endif %}
+
+            {% if comments %}
+            {% for c in comments %}
+            <div class="comment-item">
+                <div class="d-flex align-items-center mb-1">
+                    <div class="avatar-placeholder me-2" style="width:28px;height:28px;font-size:14px;border-radius:50%;background:#e9ecef;display:inline-flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-person-circle text-muted"></i>
+                    </div>
+                    <strong class="me-2">{{ c.nickname or '用户' }}</strong>
+                    <small class="text-muted">{{ c.create_time[:16] }}</small>
+                    {% if current_user.is_authenticated and (c.user_id == current_user.id or current_user.is_admin) %}
+                    <form method="POST" action="/comment/{{ c.id }}/delete" class="ms-auto" onsubmit="return confirm('确定删除这条评论？')">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:0.7rem;padding:1px 6px;">删除</button>
+                    </form>
+                    {% endif %}
+                </div>
+                <p class="mb-0 ms-4">{{ c.content }}</p>
+            </div>
+            {% if not loop.last %}<hr class="my-2">{% endif %}
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-3 text-muted">
+                <p class="mb-0">暂无评论，来发表第一条评论吧</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

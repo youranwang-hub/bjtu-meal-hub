@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}三餐打卡 - 上新了！我的饭{% endblock %}
+{% block content %}
+
+<div class="container py-3">
+    <h4 class="mb-3"><i class="bi bi-check2-circle"></i> 三餐打卡</h4>
+
+    {% if not current_user.is_authenticated %}
+    <div class="text-center py-5">
+        <a href="/login?next=/checkin" class="btn btn-primary">登录后打卡</a>
+    </div>
+    {% else %}
+
+    <!-- 打卡状态卡片 -->
+    <div class="encourage-card encourage-{{ encourage_status }} mb-2">
+        <div class="encourage-icon">
+            {% if encourage_status == 'full' %}🎉{% elif encourage_status == 'half' %}💪{% else %}☀️{% endif %}
+        </div>
+        <div class="encourage-text">{{ encourage_msg }}</div>
+    </div>
+    <div class="daily-quote mb-3">"{{ random_quote }}"</div>
+
+    <!-- 今日打卡状态 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>今日打卡 <small class="text-muted">{{ today }}</small></h5>
+            <div class="row g-2 mt-2">
+                {% for meal, icon, label in [('breakfast', 'bi-sunrise', '早餐'), ('lunch', 'bi-sun', '午餐'), ('dinner', 'bi-moon', '晚餐')] %}
+                <div class="col-4">
+                    {% if meal in done_meals %}
+                    <div class="checkin-done">
+                        <i class="bi {{ icon }} fs-4 d-block"></i>{{ label }}<br>
+                        <small class="text-success">已打卡</small>
+                    </div>
+                    {% else %}
+                    <button class="btn btn-outline-warning w-100 py-3 checkin-btn"
+                            onclick="openCheckin('{{ meal }}', '{{ label }}')">
+                        <i class="bi {{ icon }} fs-4 d-block"></i>{{ label }}
+                    </button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 打卡弹窗 -->
+    <div id="checkin-modal" class="checkin-modal" style="display:none;">
+        <div class="checkin-modal-bg" onclick="closeCheckin()"></div>
+        <div class="checkin-modal-body">
+            <h5 id="checkin-title">正在打卡...</h5>
+            <form id="checkin-form" method="POST" action="/checkin/submit">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="meal_type" id="meal_type">
+                <div class="mb-2 position-relative">
+                    <input type="text" class="form-control form-control-sm" id="dish-search-input"
+                           placeholder="输入菜名搜索..." autocomplete="off" oninput="searchDishes()">
+                    <div id="dish-suggestions" class="dish-sugg-dropdown"></div>
+                </div>
+                <div id="selected-dishes" class="mb-2"></div>
+                <div id="dish-ids-container"></div>
+                <button type="submit" class="btn btn-warning w-100 mt-2">确认打卡</button>
+            </form>
+            <button class="btn btn-sm btn-link mt-1 w-100" onclick="closeCheckin()">取消</button>
+        </div>
+    </div>
+
+    <!-- 打卡日历 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>打卡日历 <small class="text-muted">{{ today[:7] }}</small></h5>
+            <div class="cal-grid">
+                <div class="cal-header">日</div>
+                <div class="cal-header">一</div>
+                <div class="cal-header">二</div>
+                <div class="cal-header">三</div>
+                <div class="cal-header">四</div>
+                <div class="cal-header">五</div>
+                <div class="cal-header">六</div>
+                {% for day in cal_data %}
+                <div class="cal-cell {{ 'cal-done' if day.count > 0 }}{{ ' cal-empty' if day.day == '' }}">
+                    {% if day.day %}
+                    <span>{{ day.day }}</span>
+                    {% if day.count > 0 %}<i class="bi bi-check2"></i>{% endif %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 排行榜 -->
+    <div class="card">
+        <div class="card-body">
+            <h5><i class="bi bi-trophy text-warning"></i> 积分排行榜</h5>
+            <div class="leaderboard">
+                {% for u in leaderboard %}
+                <div class="lb-row {{ 'lb-me' if u.username == current_user.username }}">
+                    <span class="lb-rank">{{ loop.index }}</span>
+                    <span class="lb-name">{{ u.nickname or u.username }}</span>
+                    <span class="lb-points">{{ u.checkin_points }} 分</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+<script>
+var selectedDishes = [];
+var searchTimer = null;
+
+function openCheckin(meal, label) {
+    document.getElementById('checkin-modal').style.display = 'block';
+    document.getElementById('checkin-title').textContent = '打卡' + label;
+    document.getElementById('meal_type').value = meal;
+    document.getElementById('dish-search-input').value = '';
+    selectedDishes = [];
+    renderSelectedDishes();
+}
+
+function closeCheckin() {
+    document.getElementById('checkin-modal').style.display = 'none';
+}
+
+function searchDishes() {
+    clearTimeout(searchTimer);
+    var q = document.getElementById('dish-search-input').value.trim();
+    var box = document.getElementById('dish-suggestions');
+    if (!q) { box.style.display = 'none'; return; }
+    searchTimer = setTimeout(function() {
+        fetch('/api/dishes/search?q=' + encodeURIComponent(q))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                box.innerHTML = '';
+                if (!data.dishes || data.dishes.length === 0) {
+                    box.style.display = 'none';
+                    return;
+                }
+                data.dishes.forEach(function(d) {
+                    if (selectedDishes.find(function(s) { return s.id === d.id; })) return;
+                    var div = document.createElement('div');
+                    div.className = 'sugg-item';
+                    div.textContent = d.name + ' (' + d.stall_name + ') ¥' + d.price;
+                    div.addEventListener('click', function() {
+                        selectedDishes.push(d);
+                        renderSelectedDishes();
+                        document.getElementById('dish-search-input').value = '';
+                        box.style.display = 'none';
+                    });
+                    box.appendChild(div);
+                });
+                box.style.display = 'block';
+            });
+    }, 200);
+}
+
+function renderSelectedDishes() {
+    var container = document.getElementById('selected-dishes');
+    container.innerHTML = selectedDishes.map(function(d, i) {
+        return '<span class="badge bg-warning text-dark me-1 mb-1" style="cursor:pointer;font-size:0.85rem;" onclick="removeDish(' + i + ')">' +
+               d.name + ' ✕</span>';
+    }).join('');
+    // hidden inputs for form submission
+    var hiddenContainer = document.getElementById('dish-ids-container');
+    hiddenContainer.innerHTML = selectedDishes.map(function(d) {
+        return '<input type="hidden" name="dish_ids" value="' + d.id + '">';
+    }).join('');
+}
+
+function removeDish(index) {
+    selectedDishes.splice(index, 1);
+    renderSelectedDishes();
+}
+
+// close suggestion on outside click
+document.addEventListener('click', function(e) {
+    var input = document.getElementById('dish-search-input');
+    var box = document.getElementById('dish-suggestions');
+    if (input && box && !input.contains(e.target) && !box.contains(e.target)) {
+        box.style.display = 'none';
+    }
+});
+</script>
+
+{% endblock %}

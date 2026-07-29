@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}管理后台 - 上新了！我的饭{% endblock %}
+{% block content %}
+
+<div class="container py-3">
+    <h4 class="mb-3"><i class="bi bi-speedometer2"></i> 管理后台</h4>
+
+    <!-- 数据概览 -->
+    <div class="row g-2 mb-3">
+        <div class="col-4">
+            <div class="stat-card">
+                <div class="stat-num">{{ stats.user_count }}</div>
+                <div class="stat-label">用户</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-card">
+                <div class="stat-num">{{ stats.dish_count }}</div>
+                <div class="stat-label">菜品</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-card">
+                <div class="stat-num">{{ stats.post_count }}</div>
+                <div class="stat-label">帖子</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-card">
+                <div class="stat-num">{{ stats.rating_count }}</div>
+                <div class="stat-label">评分</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-card">
+                <div class="stat-num">{{ stats.comment_count }}</div>
+                <div class="stat-label">评论</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-card">
+                <div class="stat-num">{{ stats.checkin_count }}</div>
+                <div class="stat-label">打卡</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户列表 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5><i class="bi bi-people"></i> 用户列表（{{ users|length }}）</h5>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>用户名</th><th>昵称</th><th>角色</th><th>积分</th><th>注册时间</th><th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>{{ u.id }}</td>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.nickname or '-' }}</td>
+                            <td>{% if u.is_admin %}<span class="badge bg-danger">管理员</span>{% else %}<span class="badge bg-secondary">用户</span>{% endif %}</td>
+                            <td>{{ u.checkin_points }}</td>
+                            <td><small>{{ u.create_time[:10] }}</small></td>
+                            <td><a href="/admin/user/{{ u.id }}" class="btn btn-sm btn-outline-primary">查看</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近帖子 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5><i class="bi bi-chat-square-text"></i> 最近帖子</h5>
+            {% for p in recent_posts %}
+            <div class="py-1 border-bottom small d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ p.nickname }}</strong>: {{ p.content[:60] }}{% if p.content|length > 60 %}...{% endif %}
+                    <span class="text-muted">{{ p.create_time[:16] }}</span>
+                </div>
+                <form method="POST" action="/admin/post/{{ p.id }}/delete" onsubmit="return confirm('确定删除这条帖子？')">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">删除</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">暂无帖子</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 最近评分 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5><i class="bi bi-star-fill text-warning"></i> 最近评分</h5>
+            {% for r in recent_ratings %}
+            <div class="py-1 border-bottom small d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ r.nickname }}</strong> 评 <em>{{ r.dish_name }}</em>:
+                    {% for i in range(r.score) %}<i class="bi bi-star-fill text-warning"></i>{% endfor %}
+                    <span class="text-muted">{{ r.create_time[:16] }}</span>
+                </div>
+                <form method="POST" action="/admin/rating/{{ r.id }}/delete" onsubmit="return confirm('确定删除这条评分？')">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">删除</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">暂无评分</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 最近评论 -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5><i class="bi bi-chat-dots"></i> 最近菜品评论</h5>
+            {% for c in recent_comments %}
+            <div class="py-1 border-bottom small d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ c.nickname }}</strong> 评 <em>{{ c.dish_name }}</em>: {{ c.content[:50] }}{% if c.content|length > 50 %}...{% endif %}
+                    <span class="text-muted">{{ c.create_time[:16] }}</span>
+                </div>
+                <form method="POST" action="/admin/comment/{{ c.id }}/delete" onsubmit="return confirm('确定删除这条评论？')">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">删除</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">暂无评论</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 最近打卡 -->
+    <div class="card">
+        <div class="card-body">
+            <h5><i class="bi bi-check2-circle"></i> 最近打卡</h5>
+            {% set meal_map = {'breakfast': '早餐', 'lunch': '午餐', 'dinner': '晚餐'} %}
+            {% for c in recent_checkins %}
+            <div class="py-1 border-bottom small">
+                <strong>{{ c.nickname }}</strong>
+                {{ meal_map.get(c.meal_type, c.meal_type) }}
+                <span class="text-muted">{% if c.meal_type == 'breakfast' %}+3{% else %}+2{% endif %}</span>
+                <span class="text-muted float-end">{{ c.checkin_date }}</span>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">暂无打卡记录</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 特价菜品管理 -->
+    <div class="card">
+        <div class="card-body">
+            <h5><i class="bi bi-tag-fill text-success"></i> 特价菜品管理</h5>
+            <p class="text-muted small">输入特价价格并点击设置，首页将展示原价和特价对比</p>
+            <input type="text" class="form-control form-control-sm mb-2" id="dish-filter"
+                placeholder="搜索菜品或档口..." oninput="filterDishTable()">
+            <div class="table-responsive" style="max-height:400px;overflow-y:auto;">
+                <table class="table table-sm table-hover" id="dish-table">
+                    <thead><tr><th>菜品</th><th>档口</th><th>原价</th><th>特价</th><th>操作</th></tr></thead>
+                    <tbody>
+                        {% for d in all_dishes %}
+                        <tr data-name="{{ d.name }}{{ d.stall_name }}">
+                            <td>{{ d.name }}</td>
+                            <td><small>{{ d.stall_name }}</small></td>
+                            <td>¥{{ "%.1f"|format(d.price) }}</td>
+                            <td>
+                                {% if d.special_price %}
+                                <span class="badge bg-success">¥{{ "%.1f"|format(d.special_price) }}</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="/admin/dish/{{ d.id }}/special" class="d-flex gap-1">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    {% if d.special_price %}
+                                    <button type="submit" name="action" value="clear" class="btn btn-sm btn-outline-danger">取消</button>
+                                    {% else %}
+                                    <input type="number" name="price" step="0.1" min="0.1"
+                                        class="form-control form-control-sm" style="width:70px;"
+                                        placeholder="特价" required>
+                                    <button type="submit" name="action" value="set" class="btn btn-sm btn-success">设置</button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<script>
+function filterDishTable() {
+    var q = document.getElementById('dish-filter').value.toLowerCase();
+    document.querySelectorAll('#dish-table tbody tr').forEach(function(tr) {
+        tr.style.display = tr.dataset.name.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+</script>
+</div>
+
+{% endblock %}

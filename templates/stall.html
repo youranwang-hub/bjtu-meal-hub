@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ stall.name }} - 上新了！我的饭{% endblock %}
+{% block content %}
+
+<div class="container py-3">
+    <a href="/canteen/{{ stall.canteen_id }}" class="btn btn-sm btn-outline-secondary mb-3">
+        ← {{ stall.canteen_name }}
+    </a>
+    <div class="mb-3">
+        <h4>{{ stall.name }}</h4>
+        <p class="text-muted mb-0">
+            {% if stall.location %}{{ stall.location }}{% endif %}
+            {% if stall.open_time %} · {{ stall.open_time }}{% endif %}
+        </p>
+    </div>
+
+    <h5 class="section-title">菜品列表（{{ dishes|length }} 道）</h5>
+    <div class="dish-list">
+        {% for d in dishes %}
+        <a href="/dish/{{ d.id }}" class="dish-item text-decoration-none">
+            {% set img = get_dish_image(d) %}
+            {% if img %}
+            <img src="{{ url_for('static', filename=img) }}" class="dish-img-placeholder" alt="{{ d.name }}" style="object-fit: cover;">
+            {% else %}
+            <div class="dish-img-placeholder">
+                <i class="bi bi-image"></i>
+            </div>
+            {% endif %}
+            <div class="dish-info">
+                <div class="dish-name">
+                    {{ d.name }}
+                    {% if d.is_new %}<span class="badge bg-danger ms-1">新</span>{% endif %}
+                    {% if d.tags %}
+                    <span class="dish-tags">{{ d.tags }}</span>
+                    {% endif %}
+                </div>
+                {% if d.average_rating > 0 %}
+                <div class="dish-rating">
+                    <i class="bi bi-star-fill text-warning"></i> {{ "%.1f"|format(d.average_rating) }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="dish-price">¥{{ "%.1f"|format(d.price) }}</div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
