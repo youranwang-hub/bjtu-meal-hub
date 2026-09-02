@@ -1,0 +1,22 @@
+# 小食叙记 systemd 服务
+# 用法：放到 /etc/systemd/system/bjtu-meal.service，然后：
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now bjtu-meal
+#   sudo systemctl status bjtu-meal
+# 注意：wsgi.py 暴露的入口是 application，所以 gunicorn 目标写 wsgi:application。
+
+[Unit]
+Description=BJTU Meal Hub (小食叙记) Flask service
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/bjtu-meal
+EnvironmentFile=/opt/bjtu-meal/.env
+ExecStart=/opt/bjtu-meal/.venv/bin/gunicorn --workers 2 --bind 127.0.0.1:8000 wsgi:application
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
