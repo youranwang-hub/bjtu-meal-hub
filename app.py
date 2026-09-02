@@ -23,6 +23,9 @@ def create_app():
     @app.before_request
     def csrf_protect():
         if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
+            # 小程序 API 使用 Bearer Token 认证，不使用浏览器 Cookie + CSRF 机制。
+            if request.path.startswith('/api/'):
+                return None
             if request.path.startswith('/static/'):
                 return None
             token = request.form.get('_csrf_token', '')
@@ -35,12 +38,14 @@ def create_app():
     from community_routes import init_app as init_community
     from checkin_routes import init_app as init_checkin
     from admin_routes import init_app as init_admin
+    from api_routes import init_app as init_api
 
     init_auth(app)
     init_main(app)
     init_community(app)
     init_checkin(app)
     init_admin(app)
+    init_api(app)
 
     @app.errorhandler(404)
     def not_found(e):
