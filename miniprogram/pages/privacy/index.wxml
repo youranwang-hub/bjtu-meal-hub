@@ -1,0 +1,7 @@
+<view class="page">
+  <view class="hero"><view class="eyebrow">PRIVACY &amp; PERMISSIONS</view><view class="title">把边界说清楚</view><view class="muted">最后更新：2026 年 8 月 15 日</view></view>
+  <view class="card"><view class="section-title">我们收集什么</view><view class="item"><text>微信身份</text><view>仅在你主动登录时，用于建立账号、同步打卡、投稿和互动记录。</view></view><view class="item"><text>你主动提交的内容</text><view>包括帖子、评论、菜品实拍图、上新情报和反馈，用于展示、审核或回复。</view></view><view class="item"><text>相机与相册</text><view>仅在你点击“拍照”或“从相册选择”上传图片时使用；不会自动读取照片。</view></view><view class="item"><text>地图信息</text><view>首页展示食堂坐标与校园地图；当前不会自动获取你的精确位置。</view></view></view>
+  <view class="card"><view class="section-title">这些信息怎么用</view><view class="copy">用于完成菜品浏览、打卡、社区互动、实拍图审核、人流报送和反馈回复。社区文字会经过自动内容安全检测，违规内容可能被拦截或由管理员处理。</view></view>
+  <view class="card"><view class="section-title">你可以掌控什么</view><view class="copy">相机、相册等系统权限可随时在微信或手机系统设置中关闭。你可以停止使用相关功能；如需删除自己的内容或咨询数据问题，可通过“和饭搭子说说”提交请求。</view></view>
+  <view class="card"><view class="section-title">提示</view><view class="copy">请勿在帖子、评论、图片或反馈中发布他人的敏感个人信息。正式发布前，还需要在微信公众平台完成小程序隐私保护指引的填写与审核。</view></view>
+</view>

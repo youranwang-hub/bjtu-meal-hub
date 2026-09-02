@@ -1,0 +1,2 @@
+const app = getApp();
+Page({ data: { q: '', dishes: [] }, input(e) { this.setData({ q: e.detail.value }); }, async search() { if (!this.data.q.trim()) return; try { this.setData({ dishes: await app.request({ url: '/dishes?q=' + encodeURIComponent(this.data.q) }) }); } catch (e) { wx.showToast({ title: e.message, icon: 'none' }); } }, dish(e) { wx.navigateTo({ url: '/pages/dish/index?id=' + e.currentTarget.dataset.id }); } });

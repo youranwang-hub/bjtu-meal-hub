@@ -1,0 +1,7 @@
+page { background: #f3f0e7; color: #41342c; font-size: 28rpx; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+.page { min-height: 100vh; padding: 28rpx 28rpx 150rpx; box-sizing: border-box; background-color:#f3f0e7; background-image:radial-gradient(rgba(100,80,56,.08) .7rpx, transparent .7rpx); background-size:12rpx 12rpx; }
+.card { background: rgba(255,255,255,.91); border-radius: 30rpx; padding: 26rpx; margin-bottom: 22rpx; box-shadow: 0 12rpx 30rpx rgba(91, 69, 44, .07); }
+.section-title { font-family: Georgia, "Times New Roman", serif; letter-spacing: 1rpx; font-weight: 800; font-size: 36rpx; margin: 34rpx 4rpx 19rpx; }
+.muted { color: #8b7d73; font-size: 24rpx; }
+.primary-btn { background: #b87a36; color: #fff; border-radius: 30rpx; font-weight:600; }
+.empty { color: #8e827b; text-align: center; padding: 80rpx 20rpx; }

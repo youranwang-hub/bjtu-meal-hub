@@ -1,0 +1,1 @@
+const app=getApp();Page({data:{dishes:[]},onLoad(){this.load()},async load(){try{this.setData({dishes:await app.request({url:'/specials'})})}catch(e){wx.showToast({title:e.message,icon:'none'})}},dish(e){wx.navigateTo({url:'/pages/dish/index?id='+e.currentTarget.dataset.id})}});

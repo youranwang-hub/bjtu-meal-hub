@@ -1,0 +1,10 @@
+{
+  "pages": ["pages/home/index", "pages/search/index", "pages/specials/index", "pages/canteen/index", "pages/dish/index", "pages/community/index", "pages/post/index", "pages/checkin/index", "pages/me/index", "pages/login/index", "pages/action/index", "pages/admin/index", "pages/privacy/index"],
+  "window": { "navigationBarTitleText": "小食叙记", "navigationBarBackgroundColor": "#f3f0e7", "navigationBarTextStyle": "black", "backgroundColor": "#f3f0e7" },
+  "tabBar": { "custom": true, "color": "#777777", "selectedColor": "#b77b35", "backgroundColor": "#ffffff", "list": [
+    { "pagePath": "pages/home/index", "text": "首页" },
+    { "pagePath": "pages/community/index", "text": "社区" },
+    { "pagePath": "pages/checkin/index", "text": "打卡" },
+    { "pagePath": "pages/me/index", "text": "我的" }
+  ] }
+}

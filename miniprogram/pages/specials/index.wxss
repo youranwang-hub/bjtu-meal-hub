@@ -1,0 +1,1 @@
+.intro{font-family:Georgia,serif;color:#94785e;padding:14rpx 0 25rpx}.item{display:flex;gap:20rpx;align-items:center}.item image{width:130rpx;height:130rpx;border-radius:18rpx;background:#eee}.item>view{flex:1}.old{color:#9b8b7e;text-decoration:line-through;font-size:22rpx;margin-right:12rpx}.price{color:#ad6c2e;font-weight:bold;font-size:29rpx}
