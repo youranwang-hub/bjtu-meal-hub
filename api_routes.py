@@ -298,9 +298,9 @@ def init_app(app):
         else:
             return fail('服务端尚未配置微信登录', 503)
         db = get_db()
+        admins = {x.strip() for x in os.environ.get('WECHAT_ADMIN_OPENIDS', '').split(',') if x.strip()}
         user = db.execute('SELECT u.* FROM wechat_identity w JOIN user u ON u.id=w.user_id WHERE w.openid=?', (openid,)).fetchone()
         if not user:
-            admins = {x.strip() for x in os.environ.get('WECHAT_ADMIN_OPENIDS', '').split(',') if x.strip()}
             is_admin = int(openid in admins or (openid == 'dev-admin' and os.environ.get('FLASK_ENV') != 'production'))
             username = 'wx_' + hashlib.sha256(openid.encode()).hexdigest()[:12]
             password = secrets.token_urlsafe(32)
@@ -308,6 +308,10 @@ def init_app(app):
             user_id = cursor.lastrowid
             db.execute('INSERT INTO wechat_identity (openid,user_id) VALUES (?,?)', (openid, user_id))
             user = db.execute('SELECT * FROM user WHERE id=?', (user_id,)).fetchone()
+        elif not user['is_admin'] and openid in admins:
+            # 老用户后补进白名单：登录时同步提权
+            db.execute('UPDATE user SET is_admin=1 WHERE id=?', (user['id'],))
+            user = db.execute('SELECT * FROM user WHERE id=?', (user['id'],)).fetchone()
         token = secrets.token_urlsafe(32)
         db.execute('DELETE FROM api_token WHERE user_id=? OR expire_time<=?', (user['id'], beijing_now()))
         db.execute('INSERT INTO api_token (token,user_id,expire_time) VALUES (?,?,?)', (token, user['id'], beijing_now() + timedelta(days=30)))
